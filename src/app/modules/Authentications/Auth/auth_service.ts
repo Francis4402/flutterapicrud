@@ -4,79 +4,111 @@ import { createToken, verifyToken } from "./auth_utils";
 import config from "../../../config";
 import { User } from "../../User/user_model";
 import { TUser } from "../../User/user_interface";
+import mongoose from "mongoose";
+import { IJwtPayload } from "./auth_interface";
+
 
 
 
 
 const loginUserFromDB = async (userData: TUser) => {
-    const user = await User.findOne({email: userData.email});
 
-    if(!user) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid credentials');
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const user = await User.findOne({ email: userData.email }).session(
+            session
+        );
+
+        if (!user) {
+            throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
+         }
+
+        const isBlocked = user.isBlocked;
+
+        if(isBlocked === true) {
+            throw new AppError(StatusCodes.FORBIDDEN, 'Your account is blocked !');
+        }
+
+        if(! await User.isPasswordMatched(userData?.password, user?.password))
+            throw new AppError(StatusCodes.UNAUTHORIZED, 'Password do not matched!');
+
+        const jwtPayload: IJwtPayload = {
+            userId: user._id.toString(),
+            name: user.name as string,
+            email: user.email as string,
+            role: user.role as 'admin' | 'agent' | 'user',
+            isBlocked: user.isBlocked as boolean,
+        };
+
+        const accessToken = createToken(
+            jwtPayload,
+            config.jwt_secret as string,
+            config.jwt_access_expires_in as string,
+        );
+
+        const refreshToken = createToken(
+            jwtPayload,
+            config.jwt_refresh_secret as string,
+            config.jwt_refresh_expires_in as string,
+        );
+
+        return {accessToken, refreshToken};
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        await session.endSession();
     }
-    
-    const isBlocked = user.isBlocked;
-
-    if(isBlocked === true) {
-        throw new AppError(StatusCodes.FORBIDDEN, 'Your account is blocked !');
-    }
-
-    if(! await User.isPasswordMatched(userData?.password, user?.password))
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'Password do not matched!');
-
-    const jwtPayload = {
-        useremail: user.email,
-        role: user.role,
-    };
-
-    const accessToken = createToken(
-        jwtPayload,
-        config.jwt_secret as string,
-        config.jwt_access_expires_in as string,
-    );
-
-    const refreshToken = createToken(
-        jwtPayload,
-        config.jwt_refresh_secret as string,
-        config.jwt_refresh_expires_in as string,
-    );
-
-    return {accessToken, refreshToken};
 }
 
 
 const refreshToken = async (token: string) => {
-    const decoded = verifyToken(token, config.jwt_refresh_secret as string);
 
-    const { useremail } = decoded;
-
-    const user = await User.findOne({email: useremail});
-
-    if(!user) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid credentials');
+    let verifiedToken = null;
+    try {
+       verifiedToken = verifyToken(
+          token,
+          config.jwt_refresh_secret as string
+       );
+    } catch (err) {
+       throw new AppError(StatusCodes.FORBIDDEN, 'Invalid Refresh Token');
     }
+ 
+    const { userId } = verifiedToken;
+ 
+    const isUserExist = await User.findById(userId);
 
-    const isBlocked = user.isBlocked;
+    if (!isUserExist) {
+       throw new AppError(StatusCodes.NOT_FOUND, 'User does not exist');
+    }
+    const isBlocked = isUserExist.isBlocked;
 
     if(isBlocked === true) {
         throw new AppError(StatusCodes.FORBIDDEN, 'Your account is blocked !');
     }
-
-    const jwtPayload = {
-        useremail: user.email,
-        role: user.role,
-      };
-    
-      const accessToken = createToken(
-        jwtPayload,
-        config.jwt_refresh_secret as string,
-        config.jwt_access_expires_in as string,
-      );
-
-      return {
-        accessToken,
-      }
-}
+ 
+ 
+    const jwtPayload: IJwtPayload = {
+        userId: isUserExist._id.toString(),
+        name: isUserExist.name as string,
+        email: isUserExist.email as string,
+        role: isUserExist.role as 'admin' | 'agent' | 'user',
+        isBlocked: isUserExist.isBlocked as boolean,
+    };
+ 
+    const newAccessToken = createToken(
+       jwtPayload,
+       config.jwt_secret as string,
+       config.jwt_access_expires_in as string
+    );
+ 
+    return {
+       accessToken: newAccessToken,
+    };
+ };
 
 export const AuthService = {
     loginUserFromDB,

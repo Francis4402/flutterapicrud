@@ -18,43 +18,67 @@ const appError_1 = __importDefault(require("../../../errors/appError"));
 const auth_utils_1 = require("./auth_utils");
 const config_1 = __importDefault(require("../../../config"));
 const user_model_1 = require("../../User/user_model");
+const mongoose_1 = __importDefault(require("mongoose"));
 const loginUserFromDB = (userData) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield user_model_1.User.findOne({ email: userData.email });
-    if (!user) {
-        throw new appError_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, 'Invalid credentials');
+    const session = yield mongoose_1.default.startSession();
+    try {
+        session.startTransaction();
+        const user = yield user_model_1.User.findOne({ email: userData.email }).session(session);
+        if (!user) {
+            throw new appError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, 'This user is not found!');
+        }
+        const isBlocked = user.isBlocked;
+        if (isBlocked === true) {
+            throw new appError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, 'Your account is blocked !');
+        }
+        if (!(yield user_model_1.User.isPasswordMatched(userData === null || userData === void 0 ? void 0 : userData.password, user === null || user === void 0 ? void 0 : user.password)))
+            throw new appError_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, 'Password do not matched!');
+        const jwtPayload = {
+            userId: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            isBlocked: user.isBlocked,
+        };
+        const accessToken = (0, auth_utils_1.createToken)(jwtPayload, config_1.default.jwt_secret, config_1.default.jwt_access_expires_in);
+        const refreshToken = (0, auth_utils_1.createToken)(jwtPayload, config_1.default.jwt_refresh_secret, config_1.default.jwt_refresh_expires_in);
+        return { accessToken, refreshToken };
     }
-    const isBlocked = user.isBlocked;
-    if (isBlocked === true) {
-        throw new appError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, 'Your account is blocked !');
+    catch (error) {
+        yield session.abortTransaction();
+        throw error;
     }
-    if (!(yield user_model_1.User.isPasswordMatched(userData === null || userData === void 0 ? void 0 : userData.password, user === null || user === void 0 ? void 0 : user.password)))
-        throw new appError_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, 'Password do not matched!');
-    const jwtPayload = {
-        useremail: user.email,
-        role: user.role,
-    };
-    const accessToken = (0, auth_utils_1.createToken)(jwtPayload, config_1.default.jwt_secret, config_1.default.jwt_access_expires_in);
-    const refreshToken = (0, auth_utils_1.createToken)(jwtPayload, config_1.default.jwt_refresh_secret, config_1.default.jwt_refresh_expires_in);
-    return { accessToken, refreshToken };
+    finally {
+        yield session.endSession();
+    }
 });
 const refreshToken = (token) => __awaiter(void 0, void 0, void 0, function* () {
-    const decoded = (0, auth_utils_1.verifyToken)(token, config_1.default.jwt_refresh_secret);
-    const { useremail } = decoded;
-    const user = yield user_model_1.User.findOne({ email: useremail });
-    if (!user) {
-        throw new appError_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, 'Invalid credentials');
+    let verifiedToken = null;
+    try {
+        verifiedToken = (0, auth_utils_1.verifyToken)(token, config_1.default.jwt_refresh_secret);
     }
-    const isBlocked = user.isBlocked;
+    catch (err) {
+        throw new appError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, 'Invalid Refresh Token');
+    }
+    const { userId } = verifiedToken;
+    const isUserExist = yield user_model_1.User.findById(userId);
+    if (!isUserExist) {
+        throw new appError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, 'User does not exist');
+    }
+    const isBlocked = isUserExist.isBlocked;
     if (isBlocked === true) {
         throw new appError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, 'Your account is blocked !');
     }
     const jwtPayload = {
-        useremail: user.email,
-        role: user.role,
+        userId: isUserExist._id.toString(),
+        name: isUserExist.name,
+        email: isUserExist.email,
+        role: isUserExist.role,
+        isBlocked: isUserExist.isBlocked,
     };
-    const accessToken = (0, auth_utils_1.createToken)(jwtPayload, config_1.default.jwt_refresh_secret, config_1.default.jwt_access_expires_in);
+    const newAccessToken = (0, auth_utils_1.createToken)(jwtPayload, config_1.default.jwt_secret, config_1.default.jwt_access_expires_in);
     return {
-        accessToken,
+        accessToken: newAccessToken,
     };
 });
 exports.AuthService = {
