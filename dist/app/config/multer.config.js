@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.multerUpload = void 0;
 const multer_storage_cloudinary_1 = require("multer-storage-cloudinary");
-const cloudinary_config_1 = require("./cloudinary.config");
 const multer_1 = __importDefault(require("multer"));
+const cloudinary_config_1 = require("./cloudinary.config");
 const removeExtension = (filename) => {
     return filename.split('.').slice(0, -1).join('.');
 };

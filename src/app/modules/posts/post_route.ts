@@ -6,11 +6,13 @@ import { multerUpload } from "../../config/multer.config";
 import { parseBody } from "../../middlewares/bodyParser";
 
 
+
+
 const router = Router();
 
 router.get('/', postController.getPosts);
 
-router.post('/', multerUpload.fields([{ name: 'images' }]), parseBody, validateRequest(postValidationShcema), postController.createPost);
+router.post('/', multerUpload.fields([{name: 'images'}]), parseBody, validateRequest(postValidationShcema), postController.createPost);
 
 router.get('/:id', postController.getSinglePost);
 

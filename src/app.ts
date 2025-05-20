@@ -3,26 +3,15 @@ import cors from "cors";
 import router from "./app/routes";
 import globalErrorHandler from "./app/middlewares/globalErrorhandler";
 import notFound from "./app/middlewares/notFound";
-import http from "http";
+
 
 const app: Application = express();
 
-
-var server = http.createServer(app);
-
-var io = require("socket.io")(server, {
-    cors: {
-        origin: "*"
-    }
-})
 
 app.use(express.json());
 
 app.use(cors());
 
-io.on("Connection", (socket) => {
-    console.log("connected");
-});
 
 app.use('/api', router);
 

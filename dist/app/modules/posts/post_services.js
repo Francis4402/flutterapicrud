@@ -8,21 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.postServices = void 0;
-const http_status_codes_1 = require("http-status-codes");
-const appError_1 = __importDefault(require("../../errors/appError"));
 const post_model_1 = require("./post_model");
-const createPostIntoDB = (postData, postImages) => __awaiter(void 0, void 0, void 0, function* () {
-    const images = postImages === null || postImages === void 0 ? void 0 : postImages.images;
-    if (!images || images.length === 0) {
-        throw new appError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, 'Post images are required');
-    }
-    ;
-    postData.imageUrls = images.map((image) => image.path);
+const createPostIntoDB = (postData) => __awaiter(void 0, void 0, void 0, function* () {
     const newPost = new post_model_1.PostModel(Object.assign({}, postData));
     const result = yield newPost.save();
     return result;

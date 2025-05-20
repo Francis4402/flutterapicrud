@@ -69,7 +69,7 @@ const globalErrorHandler = (err, req, res, next) => {
         message,
         errorSources,
         err,
-        stack: config_1.default.NODE_ENV === 'development' ? err === null || err === void 0 ? void 0 : err.stack : null,
+        stack: config_1.default.node_env === 'development' ? err === null || err === void 0 ? void 0 : err.stack : null,
     });
     // Do not return anything (ensure this handler does not return a value)
     return;
