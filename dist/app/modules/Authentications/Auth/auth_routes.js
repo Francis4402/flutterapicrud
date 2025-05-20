@@ -8,12 +8,8 @@ const express_1 = require("express");
 const validateRequest_1 = __importDefault(require("../../../middlewares/validateRequest"));
 const user_validation_1 = require("../../User/user_validation");
 const auth_controller_1 = require("./auth_controller");
-const sendImagetocloud_1 = require("../../../utils/sendImagetocloud");
 const user_controller_1 = require("../../User/user_controller");
 const router = (0, express_1.Router)();
-router.post('/login', (0, validateRequest_1.default)(user_validation_1.UserValidation.userValidationSchema), auth_controller_1.AuthController.loginUser);
-router.post('/register', sendImagetocloud_1.upload.single('file'), (req, res, next) => {
-    req.body = JSON.parse(req.body.data);
-    next();
-}, (0, validateRequest_1.default)(user_validation_1.UserValidation.userValidationSchema), user_controller_1.UserController.createUser);
+router.post('/login', (0, validateRequest_1.default)(user_validation_1.UserValidation.loginZodSchema), auth_controller_1.AuthController.loginUser);
+router.post('/register', (0, validateRequest_1.default)(user_validation_1.UserValidation.userValidationSchema), user_controller_1.UserController.createUser);
 exports.AuthRoutes = router;

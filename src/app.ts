@@ -18,7 +18,7 @@ app.use('/api', router);
 app.use(express.urlencoded({extended: true}));
 
 app.get("/", (req: Request, res: Response) => {
-    res.send("update images store");
+    res.send("FLutter Chat API");
 });
 
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {

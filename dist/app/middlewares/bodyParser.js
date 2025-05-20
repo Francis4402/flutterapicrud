@@ -13,9 +13,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseBody = void 0;
-const catchAsync_1 = __importDefault(require("../utils/catchAsync"));
-const appError_1 = __importDefault(require("../errors/appError"));
 const http_status_codes_1 = require("http-status-codes");
+const appError_1 = __importDefault(require("../errors/appError"));
+const catchAsync_1 = __importDefault(require("../utils/catchAsync"));
 exports.parseBody = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.body.data) {
         throw new appError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, 'Please provide data in the body under data key');
