@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const config_1 = __importDefault(require("./app/config"));
 const app_1 = __importDefault(require("./app"));
+const socket_io_1 = require("socket.io");
 let server;
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -22,6 +23,19 @@ function main() {
             yield mongoose_1.default.connect(config_1.default.db_url);
             server = app_1.default.listen(config_1.default.port, () => {
                 console.log(`Server is running on port ${config_1.default.port}`);
+            });
+            const io = new socket_io_1.Server(server, {
+                cors: {
+                    origin: "*",
+                    methods: ["GET", "POST"]
+                }
+            });
+            io.on("connection", (socket) => {
+                console.log("✅ Client connected:", socket.id);
+                socket.on('sendMessage', (message) => {
+                    console.log('new message is:', message);
+                    io.emit('newMessage', message);
+                });
             });
         }
         catch (error) {
