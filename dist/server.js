@@ -36,6 +36,9 @@ function main() {
                     console.log('new message is:', message);
                     io.emit('newMessage', message);
                 });
+                socket.on("disconnect", () => {
+                    console.log("❌ Client disconnected:", socket.id);
+                });
             });
         }
         catch (error) {
