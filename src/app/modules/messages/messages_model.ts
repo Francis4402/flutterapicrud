@@ -17,7 +17,7 @@ const MessageSchema = new Schema<TMessage>({
     },
     message: {
       type: String,
-      required: true,
+      required: false,
     },
     image: {
         type: String,
