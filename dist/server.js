@@ -16,6 +16,8 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const config_1 = __importDefault(require("./app/config"));
 const app_1 = __importDefault(require("./app"));
 const socket_io_1 = require("socket.io");
+const messages_model_1 = require("./app/modules/messages/messages_model");
+const fileStorageService_1 = require("./app/utils/fileStorageService");
 let server;
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -32,10 +34,32 @@ function main() {
             });
             io.on("connection", (socket) => {
                 console.log("✅ Client connected:", socket.id);
-                socket.on('sendMessage', (message) => {
-                    console.log('new message is:', message);
-                    io.emit('newMessage', message);
-                });
+                socket.on('sendMessage', (data) => __awaiter(this, void 0, void 0, function* () {
+                    const { roomId, senderId, receiverId, message, image, file, fileName } = data;
+                    let imagePath;
+                    let filePath;
+                    if (image) {
+                        const extension = image.startsWith('data:image/')
+                            ? image.split(';')[0].split('/')[1] : 'jpg';
+                        imagePath = (0, fileStorageService_1.saveFile)(image, extension);
+                    }
+                    if (file) {
+                        const extension = (fileName === null || fileName === void 0 ? void 0 : fileName.split('.').pop()) || 'bin';
+                        filePath = (0, fileStorageService_1.saveFile)(file, extension);
+                    }
+                    const newMessage = new messages_model_1.MessageModel({
+                        roomId,
+                        senderId,
+                        receiverId,
+                        message,
+                        image,
+                        file,
+                        fileName,
+                        timestamp: new Date(),
+                    });
+                    yield newMessage.save();
+                    io.to(roomId).emit('newMessage', Object.assign(Object.assign({}, newMessage.toObject()), { image: undefined, file: undefined }));
+                }));
                 socket.on("disconnect", () => {
                     console.log("❌ Client disconnected:", socket.id);
                 });

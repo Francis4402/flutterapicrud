@@ -11,10 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.messagesServices = void 0;
 const messages_model_1 = require("./messages_model");
-const createMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const newMessage = yield messages_model_1.MessageModel.create(payload);
-    return newMessage;
-});
 const getMessagesBetweenUsers = (userId1, userId2) => __awaiter(void 0, void 0, void 0, function* () {
     const messages = yield messages_model_1.MessageModel.find({
         $or: [
@@ -25,5 +21,5 @@ const getMessagesBetweenUsers = (userId1, userId2) => __awaiter(void 0, void 0, 
     return messages;
 });
 exports.messagesServices = {
-    createMessage, getMessagesBetweenUsers
+    getMessagesBetweenUsers
 };

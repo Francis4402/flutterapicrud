@@ -1,13 +1,5 @@
-import { TMessage } from "./messages_interface";
 import { MessageModel } from "./messages_model"
 
-
-
-
-const createMessage = async (payload: TMessage) => {
-    const newMessage = await MessageModel.create(payload);
-    return newMessage;
-};
 
 
 const getMessagesBetweenUsers = async (
@@ -26,5 +18,5 @@ const getMessagesBetweenUsers = async (
 
 
 export const messagesServices = {
-    createMessage, getMessagesBetweenUsers
+    getMessagesBetweenUsers
 }

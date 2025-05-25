@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import config from "./app/config";
 import app from "./app";
 import { Server as SocketIOServer } from "socket.io";
+import { MessageModel } from "./app/modules/messages/messages_model";
+import { saveFile } from "./app/utils/fileStorageService";
 
 let server: Server;
 
@@ -24,9 +26,42 @@ async function main() {
         io.on("connection", (socket) => {
             console.log("✅ Client connected:", socket.id);
 
-            socket.on('sendMessage', (message) => {
-                console.log('new message is:', message);
-                io.emit('newMessage', message);
+            socket.on('sendMessage', async (data) => {
+                const { roomId, senderId, receiverId, message, image, file, fileName } = data;
+
+                let imagePath: string | undefined;
+                let filePath: string | undefined;
+
+                if(image) {
+                    const extension = image.startsWith('data:image/')
+                    ? image.split(';')[0].split('/')[1] : 'jpg';
+                    imagePath = saveFile(image, extension);
+                }
+
+                if (file) {
+                    const extension = fileName?.split('.').pop() || 'bin';
+                    filePath = saveFile(file, extension);
+                }
+
+                const newMessage = new MessageModel({
+                    roomId,
+                    senderId,
+                    receiverId,
+                    message,
+                    image,
+                    file,
+                    fileName,
+                    timestamp: new Date(),
+                  });
+
+                  await newMessage.save();
+
+                  io.to(roomId).emit('newMessage', {
+                    ...newMessage.toObject(),
+                    
+                    image: undefined,
+                    file: undefined,
+                  });
             })
 
             socket.on("disconnect", () => {

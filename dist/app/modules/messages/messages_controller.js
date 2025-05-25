@@ -11,22 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.messagesController = void 0;
 const messages_services_1 = require("./messages_services");
-const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const message = yield messages_services_1.messagesServices.createMessage(req.body);
-        res.status(201).json({
-            success: true,
-            data: message,
-        });
-    }
-    catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to send message",
-            error: error instanceof Error ? error.message : "Unknown error",
-        });
-    }
-});
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { user1, user2 } = req.params;
     try {
@@ -45,5 +29,5 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.messagesController = {
-    sendMessage, getMessages
+    getMessages
 };
