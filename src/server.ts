@@ -52,17 +52,35 @@ async function main() {
                     file,
                     fileName,
                     timestamp: new Date(),
-                  });
+                });
 
-                  await newMessage.save();
+                await newMessage.save();
 
-                  io.to(roomId).emit('newMessage', {
-                    ...newMessage.toObject(),
-                    
-                    image: undefined,
-                    file: undefined,
-                  });
-            })
+                io.to(roomId).emit('newMessage', {
+                ...newMessage.toObject(),
+                
+                image: undefined,
+                file: undefined,
+                });
+            });
+
+            socket.on('deleteMessage', async (data) => {
+                const {_id, roomId, senderId} = data;
+
+                try {
+                    const message = await MessageModel.findById(_id);
+
+                    if(!message) return;
+
+                    if(message.senderId !== senderId) return;
+
+                    await message.deleteOne();
+
+                    io.to(roomId).emit('messageDeleted', {_id});
+                } catch (error) {
+                    console.error("❌ Error deleting message:", error);
+                }
+            });
 
             socket.on("disconnect", () => {
                 console.log("❌ Client disconnected:", socket.id);

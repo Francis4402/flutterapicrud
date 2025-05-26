@@ -19,19 +19,8 @@ const getMessages = async (req: Request, res: Response) => {
     });
 };
 
-const deleteMessage = catchAsync(async (req, res) => {
-  
-  const message = await messagesServices.deleteMessageFromDB(req.params.id);
-
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: 'Post Deleted',
-    data: message,
-  });
-});
 
 
 export const messagesController = {
-    getMessages, deleteMessage
+    getMessages
 }

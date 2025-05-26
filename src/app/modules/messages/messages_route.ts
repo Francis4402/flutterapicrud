@@ -17,7 +17,6 @@ router.get('/:user1/:user2', async (req, res) => {
     }
 });
 
-router.post('/delete/:id', messagesController.deleteMessage);
 
 
 export const messagesRoute = router;
