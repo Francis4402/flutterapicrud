@@ -8,26 +8,34 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.messagesController = void 0;
 const messages_services_1 = require("./messages_services");
+const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
+const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
+const http_status_codes_1 = require("http-status-codes");
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { user1, user2 } = req.params;
-    try {
-        const messages = yield messages_services_1.messagesServices.getMessagesBetweenUsers(user1, user2);
-        res.status(200).json({
-            success: true,
-            data: messages,
-        });
-    }
-    catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to retrieve messages",
-            error: error instanceof Error ? error.message : "Unknown error",
-        });
-    }
+    const messages = yield messages_services_1.messagesServices.getMessagesBetweenUsers(user1, user2);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        success: true,
+        message: 'Messages Retrieved',
+        data: messages,
+    });
 });
+const deleteMessage = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const message = yield messages_services_1.messagesServices.deleteMessageFromDB(req.params.id);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        success: true,
+        message: 'Post Deleted',
+        data: message,
+    });
+}));
 exports.messagesController = {
-    getMessages
+    getMessages, deleteMessage
 };

@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.messagesRoute = void 0;
 const express_1 = require("express");
 const messages_model_1 = require("./messages_model");
+const messages_controller_1 = require("./messages_controller");
 const router = (0, express_1.Router)();
 router.get('/:user1/:user2', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { user1, user2 } = req.params;
@@ -24,4 +25,5 @@ router.get('/:user1/:user2', (req, res) => __awaiter(void 0, void 0, void 0, fun
         res.status(500).json({ error: 'Failed to fetch messages' });
     }
 }));
+router.post('/delete/:id', messages_controller_1.messagesController.deleteMessage);
 exports.messagesRoute = router;

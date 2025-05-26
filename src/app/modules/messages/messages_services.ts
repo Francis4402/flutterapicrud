@@ -16,7 +16,12 @@ const getMessagesBetweenUsers = async (
     return messages;
 };
 
+const deleteMessageFromDB = async (id: string) => {
+    const result = await MessageModel.findOneAndDelete({_id: id});
+    return result;
+}
+
 
 export const messagesServices = {
-    getMessagesBetweenUsers
+    getMessagesBetweenUsers, deleteMessageFromDB
 }

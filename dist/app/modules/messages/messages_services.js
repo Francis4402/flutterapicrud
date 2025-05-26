@@ -20,6 +20,10 @@ const getMessagesBetweenUsers = (userId1, userId2) => __awaiter(void 0, void 0, 
     }).sort({ createdAt: 1 });
     return messages;
 });
+const deleteMessageFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield messages_model_1.MessageModel.findOneAndDelete({ _id: id });
+    return result;
+});
 exports.messagesServices = {
-    getMessagesBetweenUsers
+    getMessagesBetweenUsers, deleteMessageFromDB
 };

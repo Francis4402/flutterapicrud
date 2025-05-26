@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { MessageModel } from "./messages_model";
+import { messagesController } from "./messages_controller";
 
 
 const router = Router();
@@ -15,5 +16,8 @@ router.get('/:user1/:user2', async (req, res) => {
       res.status(500).json({ error: 'Failed to fetch messages' });
     }
 });
+
+router.post('/delete/:id', messagesController.deleteMessage);
+
 
 export const messagesRoute = router;
