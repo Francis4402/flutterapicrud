@@ -65,18 +65,23 @@ async function main() {
             });
 
             socket.on('deleteMessage', async (data) => {
-                const {_id, roomId, senderId} = data;
+                const { _id, roomId, senderId } = data;
 
                 try {
                     const message = await MessageModel.findById(_id);
 
-                    if(!message) return;
+                    if (!message) {
+                        console.log("Message not found");
+                        return;
+                    }
 
-                    if(message.senderId !== senderId) return;
+                    if (message.senderId.toString() !== senderId) {
+                        console.log("Unauthorized deletion attempt");
+                        return;
+                    }
 
-                    await message.deleteOne();
-
-                    io.to(roomId).emit('messageDeleted', {_id});
+                    await MessageModel.deleteOne({ _id: _id });
+                    io.to(roomId).emit('messageDeleted', { _id: _id });
                 } catch (error) {
                     console.error("❌ Error deleting message:", error);
                 }
