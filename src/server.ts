@@ -66,22 +66,25 @@ async function main() {
 
             socket.on('deleteMessage', async (data) => {
                 const { _id, roomId, senderId } = data;
-
+            
                 try {
-                    const message = await MessageModel.findById(_id);
-
+                    // Convert string ID to MongoDB ObjectId
+                    const message = await MessageModel.findOne({ _id: new mongoose.Types.ObjectId(_id) });
+            
                     if (!message) {
                         console.log("Message not found");
                         return;
                     }
-
+            
+                    // Compare senderId as strings
                     if (message.senderId.toString() !== senderId) {
                         console.log("Unauthorized deletion attempt");
                         return;
                     }
-
-                    await MessageModel.deleteOne({ _id: _id });
+            
+                    await MessageModel.deleteOne({ _id: new mongoose.Types.ObjectId(_id) });
                     io.to(roomId).emit('messageDeleted', { _id: _id });
+                    console.log(`Message ${_id} deleted successfully`);
                 } catch (error) {
                     console.error("❌ Error deleting message:", error);
                 }
