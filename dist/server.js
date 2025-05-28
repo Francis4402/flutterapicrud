@@ -60,6 +60,29 @@ function main() {
                     yield newMessage.save();
                     io.to(roomId).emit('newMessage', Object.assign(Object.assign({}, newMessage.toObject()), { image: undefined, file: undefined }));
                 }));
+                socket.on('deleteMessage', (data) => __awaiter(this, void 0, void 0, function* () {
+                    try {
+                        const { id, roomId, senderId } = data;
+                        console.log(data);
+                        const message = yield messages_model_1.MessageModel.findById(id);
+                        if (!message) {
+                            console.log('[WARNING] Message not found');
+                            return;
+                        }
+                        const deletedMessage = yield messages_model_1.MessageModel.findOneAndDelete({
+                            _id: id,
+                            senderId: senderId
+                        });
+                        if (deletedMessage) {
+                            io.to(roomId).emit('messageDeleted', {
+                                id: deletedMessage._id.toString()
+                            });
+                        }
+                    }
+                    catch (error) {
+                        console.log(error);
+                    }
+                }));
                 socket.on("disconnect", () => {
                     console.log("❌ Client disconnected:", socket.id);
                 });

@@ -3,7 +3,7 @@ import cors from "cors";
 import router from "./app/routes";
 import globalErrorHandler from "./app/middlewares/globalErrorhandler";
 import notFound from "./app/middlewares/notFound";
-
+import path from 'path';
 
 const app: Application = express();
 
@@ -20,6 +20,8 @@ app.use(express.urlencoded({extended: true}));
 app.get("/", (req: Request, res: Response) => {
     res.send("FLutter Chat API");
 });
+
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
     globalErrorHandler(error, req, res, next);

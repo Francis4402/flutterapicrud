@@ -4,7 +4,10 @@ import config from "./app/config";
 import app from "./app";
 import { Server as SocketIOServer } from "socket.io";
 import { MessageModel } from "./app/modules/messages/messages_model";
-import { saveFile } from "./app/utils/fileStorageService";
+import { deleteFile, saveFile } from "./app/utils/fileStorageService";
+import path from 'path';
+import fs from 'fs';
+
 
 let server: Server;
 
@@ -49,46 +52,79 @@ async function main() {
                     receiverId,
                     message,
                     image,
-                    file,
+                    file: filePath,
                     fileName,
                     timestamp: new Date(),
                 });
-
+                
+                
                 await newMessage.save();
 
                 io.to(roomId).emit('newMessage', {
-                ...newMessage.toObject(),
-                
-                image: undefined,
-                file: undefined,
+                    _id: newMessage._id,
+                    roomId,
+                    senderId,
+                    receiverId,
+                    message,
+                    image,
+                    file: filePath,
+                    fileName,
+                    timestamp: newMessage.timestamp,
                 });
+                  
             });
 
             socket.on('deleteMessage', async (data) => {
-                const { _id, roomId, senderId } = data;
-            
                 try {
-                    // Convert string ID to MongoDB ObjectId
-                    const message = await MessageModel.findOne({ _id: new mongoose.Types.ObjectId(_id) });
-            
+                    const { id, roomId, senderId } = data;
+                    
+                    console.log(data);
+                    const message = await MessageModel.findById(id);
+
                     if (!message) {
-                        console.log("Message not found");
+                        console.log('[WARNING] Message not found');
                         return;
                     }
-            
-                    // Compare senderId as strings
+
                     if (message.senderId.toString() !== senderId) {
-                        console.log("Unauthorized deletion attempt");
+                        console.log('[ERROR] Unauthorized deletion attempt');
                         return;
                     }
-            
-                    await MessageModel.deleteOne({ _id: new mongoose.Types.ObjectId(_id) });
-                    io.to(roomId).emit('messageDeleted', { _id: _id });
-                    console.log(`Message ${_id} deleted successfully`);
+
+                    if (message.image) {
+                        console.log(`[INFO] Attempting to delete image: ${message.image}`);
+                        const imageDeleted = deleteFile(message.image);
+                        if (!imageDeleted) {
+                            console.log('[WARNING] Image deletion failed');
+                        }
+                    }
+
+                    if (message.file) {
+                        console.log(`[INFO] Attempting to delete file: ${message.file}`);
+                        const fileDeleted = deleteFile(message.file);
+                        if (!fileDeleted) {
+                            console.log('[WARNING] File deletion failed');
+                        }
+                    }
+
+                    const deletedMessage = await MessageModel.findOneAndDelete({
+                        _id: id,
+                        senderId: senderId
+                    });
+                    
+                    if (deletedMessage) {
+                        io.to(roomId).emit('messageDeleted', { 
+                            id: deletedMessage._id.toString()
+                        });
+                    }
+
+                    
                 } catch (error) {
-                    console.error("❌ Error deleting message:", error);
+                    console.log(error);
                 }
             });
+
+            
 
             socket.on("disconnect", () => {
                 console.log("❌ Client disconnected:", socket.id);

@@ -18,11 +18,35 @@ export const saveFile = (fileData: string, extension: string): string => {
   const buffer = Buffer.from(base64Data, 'base64');
   
   fs.writeFileSync(filePath, buffer);
-  return filePath;
+  return `/uploads/${fileName}`;
 };
 
-export const deleteFile = (filePath: string): void => {
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
+export const deleteFile = (filePath: string): boolean => {
+  if (!filePath || typeof filePath !== 'string') {
+    console.error('Invalid file path provided');
+    return false;
+  }
+
+  try {
+    // Convert relative path to absolute path
+    const absolutePath = path.resolve(__dirname, '../../', filePath.startsWith('/') ? filePath.slice(1) : filePath);
+    
+    // Security check - ensure path is within uploads directory
+    if (!absolutePath.startsWith(UPLOAD_DIR)) {
+      console.error('Attempted to delete file outside uploads directory');
+      return false;
+    }
+
+    if (fs.existsSync(absolutePath)) {
+      fs.unlinkSync(absolutePath);
+      console.log(`Successfully deleted file: ${absolutePath}`);
+      return true;
+    } else {
+      console.warn(`File not found: ${absolutePath}`);
+      return false;
+    }
+  } catch (error) {
+    console.error(`Error deleting file ${filePath}:`, error);
+    return false;
   }
 };
