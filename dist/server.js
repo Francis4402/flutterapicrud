@@ -53,12 +53,22 @@ function main() {
                         receiverId,
                         message,
                         image,
-                        file,
+                        file: filePath,
                         fileName,
                         timestamp: new Date(),
                     });
                     yield newMessage.save();
-                    io.to(roomId).emit('newMessage', Object.assign(Object.assign({}, newMessage.toObject()), { image: undefined, file: undefined }));
+                    io.to(roomId).emit('newMessage', {
+                        _id: newMessage._id,
+                        roomId,
+                        senderId,
+                        receiverId,
+                        message,
+                        image,
+                        file: filePath,
+                        fileName,
+                        timestamp: newMessage.timestamp,
+                    });
                 }));
                 socket.on('deleteMessage', (data) => __awaiter(this, void 0, void 0, function* () {
                     try {
@@ -68,6 +78,24 @@ function main() {
                         if (!message) {
                             console.log('[WARNING] Message not found');
                             return;
+                        }
+                        if (message.senderId.toString() !== senderId) {
+                            console.log('[ERROR] Unauthorized deletion attempt');
+                            return;
+                        }
+                        if (message.image) {
+                            console.log(`[INFO] Attempting to delete image: ${message.image}`);
+                            const imageDeleted = (0, fileStorageService_1.deleteFile)(message.image);
+                            if (!imageDeleted) {
+                                console.log('[WARNING] Image deletion failed');
+                            }
+                        }
+                        if (message.file) {
+                            console.log(`[INFO] Attempting to delete file: ${message.file}`);
+                            const fileDeleted = (0, fileStorageService_1.deleteFile)(message.file);
+                            if (!fileDeleted) {
+                                console.log('[WARNING] File deletion failed');
+                            }
                         }
                         const deletedMessage = yield messages_model_1.MessageModel.findOneAndDelete({
                             _id: id,

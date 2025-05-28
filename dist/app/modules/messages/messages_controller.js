@@ -14,9 +14,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.messagesController = void 0;
 const messages_services_1 = require("./messages_services");
+const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const http_status_codes_1 = require("http-status-codes");
-const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMessages = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { user1, user2 } = req.params;
     const messages = yield messages_services_1.messagesServices.getMessagesBetweenUsers(user1, user2);
     (0, sendResponse_1.default)(res, {
@@ -25,7 +26,7 @@ const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         message: 'Messages Retrieved',
         data: messages,
     });
-});
+}));
 exports.messagesController = {
     getMessages
 };

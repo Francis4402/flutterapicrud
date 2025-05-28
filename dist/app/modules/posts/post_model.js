@@ -7,7 +7,7 @@ const PostSchema = new mongoose_1.Schema({
         type: String,
         required: true,
     },
-    description: {
+    downloadUrl: {
         type: String,
         required: true,
     },
