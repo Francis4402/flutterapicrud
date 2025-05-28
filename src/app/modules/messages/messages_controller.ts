@@ -1,4 +1,3 @@
-import { Request, Response } from "express";
 import { messagesServices } from "./messages_services";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
@@ -6,7 +5,7 @@ import { StatusCodes } from "http-status-codes";
 
 
 
-const getMessages = async (req: Request, res: Response) => {
+const getMessages = catchAsync( async (req, res)  => {
     const { user1, user2 } = req.params;
   
     const messages = await messagesServices.getMessagesBetweenUsers(user1, user2);
@@ -17,7 +16,7 @@ const getMessages = async (req: Request, res: Response) => {
       message: 'Messages Retrieved',
       data: messages,
     });
-};
+});
 
 
 

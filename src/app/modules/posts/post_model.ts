@@ -7,7 +7,7 @@ const PostSchema = new Schema<TPost>({
       type: String,
       required: true,
     },
-    description: {
+    downloadUrl: {
       type: String,
       required: true,
     },

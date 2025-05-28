@@ -2,6 +2,6 @@
 
 export type TPost = {
     title: string;
-    description: string;
+    downloadUrl: string;
     imageUrls?: string[];
 }
