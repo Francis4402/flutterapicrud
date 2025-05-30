@@ -18,7 +18,7 @@ const PostSchema = new Schema<TPost>({
     },
   }, {
     timestamps: true,
-  });
+});
   
 
 export const PostModel = model<TPost>('posts', PostSchema);

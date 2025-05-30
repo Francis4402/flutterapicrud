@@ -8,8 +8,6 @@ import { USER_ROLE } from "../User/user_constant";
 
 
 
-
-
 const router = Router();
 
 router.get('/', postController.getPosts);
