@@ -2,14 +2,12 @@ import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { postServices } from "./post_services";
-import { IImageFiles } from "../../interface/IImageFile";
+
 
 
 const createPost = catchAsync(async (req, res) => {
     
-    const result = await postServices.createPostIntoDB(req.body, req.files as IImageFiles);
-
-    console.log(result);
+    const result = await postServices.createPostIntoDB(req.body);
 
     sendResponse(res, {
         statusCode: StatusCodes.CREATED,

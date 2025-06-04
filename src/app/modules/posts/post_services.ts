@@ -1,23 +1,9 @@
-import { StatusCodes } from "http-status-codes";
-import AppError from "../../errors/appError";
-import { IImageFiles } from "../../interface/IImageFile";
 import { TPost } from "./post_interface";
 import { PostModel } from "./post_model";
 
 
 
-const createPostIntoDB = async (postData: Partial<TPost>, postImages?: IImageFiles) => {
-
-    const images = postImages?.images;
-
-    if(!images || images.length === 0) {
-        throw new AppError(
-            StatusCodes.BAD_REQUEST,
-            'Post images are required'
-        );
-    };
-
-    postData.imageUrls = images.map((image) => image.path);
+const createPostIntoDB = async (postData: Partial<TPost>) => {
 
     const newPost = new PostModel({
         ...postData,
