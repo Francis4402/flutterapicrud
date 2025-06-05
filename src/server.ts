@@ -58,6 +58,7 @@ async function main() {
                 
                 
                 await newMessage.save();
+                
 
                 io.to(roomId).emit('newMessage', {
                     _id: newMessage._id,
