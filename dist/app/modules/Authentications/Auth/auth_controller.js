@@ -63,7 +63,40 @@ const refreshToken = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
         data: result,
     });
 }));
+const changePassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const payload = req.body;
+    yield auth_service_1.AuthService.changePassword(user, payload);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        success: true,
+        message: "Password changed successfully!",
+        data: null,
+    });
+}));
+const forgotPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield auth_service_1.AuthService.forgotPassword(req.body);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        success: true,
+        message: 'Password reset token generated successfully!',
+        data: null,
+    });
+}));
+const resetPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const payload = req.body;
+    const result = yield auth_service_1.AuthService.resetPassword(payload);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        success: true,
+        message: "Password reset successfully!",
+        data: result,
+    });
+}));
 exports.AuthController = {
     loginUser,
-    refreshToken
+    refreshToken,
+    resetPassword,
+    changePassword,
+    forgotPassword
 };

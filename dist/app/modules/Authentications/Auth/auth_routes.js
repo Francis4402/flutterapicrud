@@ -9,8 +9,13 @@ const validateRequest_1 = __importDefault(require("../../../middlewares/validate
 const user_validation_1 = require("../../User/user_validation");
 const auth_controller_1 = require("./auth_controller");
 const user_controller_1 = require("../../User/user_controller");
+const auth_1 = __importDefault(require("../../../middlewares/auth"));
+const user_constant_1 = require("../../User/user_constant");
 const router = (0, express_1.Router)();
 router.post('/login', (0, validateRequest_1.default)(user_validation_1.UserValidation.loginZodSchema), auth_controller_1.AuthController.loginUser);
 router.post('/register', (0, validateRequest_1.default)(user_validation_1.UserValidation.userValidationSchema), user_controller_1.UserController.createUser);
 router.post('/refresh-token', auth_controller_1.AuthController.refreshToken);
+router.post('/change-password', (0, auth_1.default)([user_constant_1.USER_ROLE.admin, user_constant_1.USER_ROLE.agent, user_constant_1.USER_ROLE.user]), auth_controller_1.AuthController.changePassword);
+router.post('/forgot-password', auth_controller_1.AuthController.forgotPassword);
+router.post('/reset-password', auth_controller_1.AuthController.resetPassword);
 exports.AuthRoutes = router;

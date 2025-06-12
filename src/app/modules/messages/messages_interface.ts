@@ -3,8 +3,9 @@ export type TMessage = {
     senderId: string;
     receiverId: string;
     message?: string;
-    image?: string;       // base64 string or image URL
-    file?: string;        // base64 string or file URL
+    image?: string;
+    file?: string;
     fileName?: string;
+    isRead?: boolean;
     timestamp: string | Date;
   };

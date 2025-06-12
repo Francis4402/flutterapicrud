@@ -74,6 +74,35 @@ async function main() {
                   
             });
 
+            socket.on('markAsRead', async ({ roomId, senderId, receiverId }) => {
+                try {
+                  await MessageModel.updateMany(
+                    {
+                      roomId,
+                      senderId,
+                      receiverId,
+                      isRead: false,
+                    },
+                    { $set: { isRead: true } }
+                  );
+              
+                  io.to(roomId).emit('messagesRead', {
+                    senderId,
+                    receiverId,
+                  });
+              
+                  const unreadCount = await MessageModel.countDocuments({
+                    receiverId,
+                    isRead: false,
+                  });
+                  io.to(receiverId).emit('unreadCountUpdate', { unreadCount });
+                } catch (err) {
+                  console.error("Error marking messages as read:", err);
+                }
+            });
+              
+              
+
             socket.on('deleteMessage', async (data) => {
                 try {
                     const { id, roomId, senderId } = data;

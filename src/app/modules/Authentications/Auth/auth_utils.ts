@@ -1,9 +1,9 @@
-import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
+import jwt, { JwtPayload, Secret, SignOptions } from 'jsonwebtoken';
 import { IJwtPayload } from './auth_interface';
 
 export const createToken = (
     jwtPayload: IJwtPayload,
-    secret: string,
+    secret: Secret,
     expiresIn: string,
 ) => {
   const options: SignOptions = {
@@ -12,6 +12,6 @@ export const createToken = (
   return jwt.sign(jwtPayload, secret, options);
 };
 
-export const verifyToken = (token: string, secret: string) => {
+export const verifyToken = (token: string, secret: Secret) => {
   return jwt.verify(token, secret) as JwtPayload;
 };

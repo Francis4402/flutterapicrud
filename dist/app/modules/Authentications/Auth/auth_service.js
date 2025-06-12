@@ -19,6 +19,7 @@ const auth_utils_1 = require("./auth_utils");
 const config_1 = __importDefault(require("../../../config"));
 const user_model_1 = require("../../User/user_model");
 const mongoose_1 = __importDefault(require("mongoose"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const loginUserFromDB = (userData) => __awaiter(void 0, void 0, void 0, function* () {
     const session = yield mongoose_1.default.startSession();
     try {
@@ -81,7 +82,78 @@ const refreshToken = (token) => __awaiter(void 0, void 0, void 0, function* () {
         accessToken: newAccessToken,
     };
 });
+const changePassword = (userData, payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = userData;
+    const { oldPassword, newPassword } = payload;
+    const user = yield user_model_1.User.findOne({ _id: userId });
+    if (!user) {
+        throw new appError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, 'User not found');
+    }
+    if (user.isBlocked) {
+        throw new appError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, 'User account is Blocked');
+    }
+    const isOldPasswordCorrect = yield user_model_1.User.isPasswordMatched(oldPassword, user.password);
+    if (!isOldPasswordCorrect) {
+        throw new appError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, 'Incorrect old password');
+    }
+    const hashedPassword = yield bcrypt_1.default.hash(newPassword, Number(config_1.default.bcrypt_salt_rounds));
+    yield user_model_1.User.updateOne({ _id: userId }, { password: hashedPassword });
+    return { message: 'Password changed successfully' };
+});
+const forgotPassword = (_a) => __awaiter(void 0, [_a], void 0, function* ({ email }) {
+    const user = yield user_model_1.User.findOne({ email: email });
+    if (!user) {
+        throw new appError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, 'User not found');
+    }
+    if (user.isBlocked) {
+        throw new appError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, 'User is blocked!');
+    }
+    const resetToken = (0, auth_utils_1.createToken)({
+        userId: user._id.toString(),
+        email: user.email
+    }, config_1.default.jwt_secret, '1h');
+    return {
+        status: 'success',
+        message: 'Password reset token generated',
+        data: {
+            resetToken
+        }
+    };
+});
+const resetPassword = (_a) => __awaiter(void 0, [_a], void 0, function* ({ token, newPassword }) {
+    const session = yield mongoose_1.default.startSession();
+    try {
+        session.startTransaction();
+        const decodedData = (0, auth_utils_1.verifyToken)(token, config_1.default.jwt_secret);
+        const user = yield user_model_1.User.findOne({
+            email: decodedData.email,
+            _id: decodedData.userId
+        }).session(session);
+        if (!user) {
+            throw new appError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, 'User not found');
+        }
+        if (user.isBlocked) {
+            throw new appError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, 'User is blocked!');
+        }
+        const hashedPassword = yield bcrypt_1.default.hash(newPassword, Number(config_1.default.bcrypt_salt_rounds));
+        yield user_model_1.User.updateOne({ _id: user._id }, { password: hashedPassword }).session(session);
+        yield session.commitTransaction();
+        return {
+            message: 'Password reset successfully',
+        };
+    }
+    catch (error) {
+        yield session.abortTransaction();
+        throw error;
+    }
+    finally {
+        session.endSession();
+    }
+});
 exports.AuthService = {
     loginUserFromDB,
-    refreshToken
+    refreshToken,
+    changePassword,
+    forgotPassword,
+    resetPassword
 };

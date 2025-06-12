@@ -70,6 +70,28 @@ function main() {
                         timestamp: newMessage.timestamp,
                     });
                 }));
+                socket.on('markAsRead', (_a) => __awaiter(this, [_a], void 0, function* ({ roomId, senderId, receiverId }) {
+                    try {
+                        yield messages_model_1.MessageModel.updateMany({
+                            roomId,
+                            senderId,
+                            receiverId,
+                            isRead: false,
+                        }, { $set: { isRead: true } });
+                        io.to(roomId).emit('messagesRead', {
+                            senderId,
+                            receiverId,
+                        });
+                        const unreadCount = yield messages_model_1.MessageModel.countDocuments({
+                            receiverId,
+                            isRead: false,
+                        });
+                        io.to(receiverId).emit('unreadCountUpdate', { unreadCount });
+                    }
+                    catch (err) {
+                        console.error("Error marking messages as read:", err);
+                    }
+                }));
                 socket.on('deleteMessage', (data) => __awaiter(this, void 0, void 0, function* () {
                     try {
                         const { id, roomId, senderId } = data;

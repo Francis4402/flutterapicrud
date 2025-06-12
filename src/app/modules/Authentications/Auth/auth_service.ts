@@ -1,3 +1,4 @@
+import { ClientSession } from 'mongoose';
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../../errors/appError";
 import { createToken, verifyToken } from "./auth_utils";
@@ -6,7 +7,8 @@ import { User } from "../../User/user_model";
 import { TUser } from "../../User/user_interface";
 import mongoose from "mongoose";
 import { IJwtPayload } from "./auth_interface";
-
+import { JwtPayload } from "jsonwebtoken";
+import bcrypt from 'bcrypt';
 
 
 
@@ -110,7 +112,133 @@ const refreshToken = async (token: string) => {
     };
  };
 
+const changePassword = async (
+   userData: JwtPayload,
+   payload: { oldPassword: string; newPassword: string }
+) => {
+   const { userId } = userData;
+   const { oldPassword, newPassword } = payload;
+
+   const user = await User.findOne({ _id: userId });
+
+   if (!user) {
+      throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+   }
+
+   if (user.isBlocked) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'User account is Blocked');
+   }
+
+
+   const isOldPasswordCorrect = await User.isPasswordMatched(
+      oldPassword,
+      user.password
+   );
+
+   if (!isOldPasswordCorrect) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'Incorrect old password');
+   }
+
+
+   const hashedPassword = await bcrypt.hash(
+      newPassword,
+      Number(config.bcrypt_salt_rounds)
+   );
+
+   await User.updateOne({ _id: userId }, { password: hashedPassword });
+
+   return { message: 'Password changed successfully' };
+};
+
+
+const forgotPassword = async ({ email }: { email: string }) => {
+
+   const user = await User.findOne({ email: email });
+
+   if (!user) {
+       throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+   }
+
+   if (user.isBlocked) {
+       throw new AppError(StatusCodes.FORBIDDEN, 'User is blocked!');
+   }
+
+
+   const resetToken = createToken(
+      { 
+          userId: user._id.toString(),
+          email: user.email 
+      } as IJwtPayload,
+      config.jwt_secret as string,
+      '1h'
+  );
+
+   if (!resetToken) {
+      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to generate reset token');
+   }
+
+   return { 
+      status: 'success',
+      message: 'Password reset token generated',
+      data: {
+          resetToken
+      }
+   };
+};
+
+
+
+const resetPassword = async ({token, newPassword}: {token: string, newPassword: string}) => {
+   const session: ClientSession = await mongoose.startSession();
+
+   try {
+       session.startTransaction();
+
+       const decodedData = verifyToken(
+           token,
+           config.jwt_secret as string
+       );
+
+       const user = await User.findOne({ 
+           email: decodedData.email,
+           _id: decodedData.userId 
+       }).session(session);
+
+       if (!user) {
+           throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+       }
+
+       if (user.isBlocked) {
+           throw new AppError(StatusCodes.FORBIDDEN, 'User is blocked!');
+       }
+
+       const hashedPassword = await bcrypt.hash(
+           newPassword,
+           Number(config.bcrypt_salt_rounds)
+       );
+
+       await User.updateOne(
+           { _id: user._id }, 
+           { password: hashedPassword }
+       ).session(session);
+
+       await session.commitTransaction();
+
+       return {
+           message: 'Password reset successfully',
+       };
+   } catch (error) {
+       await session.abortTransaction();
+       throw error;
+   } finally {
+       session.endSession();
+   }
+};
+
 export const AuthService = {
     loginUserFromDB,
-    refreshToken
+    refreshToken,
+    changePassword,
+    forgotPassword,
+    resetPassword
 }

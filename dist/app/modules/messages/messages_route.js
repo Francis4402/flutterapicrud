@@ -24,4 +24,17 @@ router.get('/:user1/:user2', (req, res) => __awaiter(void 0, void 0, void 0, fun
         res.status(500).json({ error: 'Failed to fetch messages' });
     }
 }));
+router.get('/unreadCount/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.params;
+    try {
+        const unreadCount = yield messages_model_1.MessageModel.countDocuments({
+            receiverId: userId,
+            isRead: false,
+        });
+        res.status(200).json({ unreadCount });
+    }
+    catch (error) {
+        res.status(500).json({ error: "Failed to fetch unread messages count" });
+    }
+}));
 exports.messagesRoute = router;
