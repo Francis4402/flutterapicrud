@@ -100,25 +100,38 @@ const changePassword = (userData, payload) => __awaiter(void 0, void 0, void 0, 
     yield user_model_1.User.updateOne({ _id: userId }, { password: hashedPassword });
     return { message: 'Password changed successfully' };
 });
-const forgotPassword = (_a) => __awaiter(void 0, [_a], void 0, function* ({ email }) {
-    const user = yield user_model_1.User.findOne({ email: email });
-    if (!user) {
-        throw new appError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, 'User not found');
-    }
-    if (user.isBlocked) {
-        throw new appError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, 'User is blocked!');
-    }
-    const resetToken = (0, auth_utils_1.createToken)({
-        userId: user._id.toString(),
-        email: user.email
-    }, config_1.default.jwt_secret, '1h');
-    return {
-        status: 'success',
-        message: 'Password reset token generated',
-        data: {
-            resetToken
+const forgotPassword = (userData) => __awaiter(void 0, void 0, void 0, function* () {
+    const session = yield mongoose_1.default.startSession();
+    try {
+        session.startTransaction();
+        const user = yield user_model_1.User.findOne({ email: userData.email }).session(session);
+        if (!user) {
+            throw new appError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, 'This user is not found!');
         }
-    };
+        const isBlocked = user.isBlocked;
+        if (isBlocked === true) {
+            throw new appError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, 'Your account is blocked !');
+        }
+        const jwtPayload = {
+            userId: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            isBlocked: user.isBlocked,
+        };
+        const resetToken = (0, auth_utils_1.createToken)(jwtPayload, config_1.default.jwt_secret, config_1.default.jwt_access_expires_in);
+        const refreshToken = (0, auth_utils_1.createToken)(jwtPayload, config_1.default.jwt_refresh_secret, config_1.default.jwt_refresh_expires_in);
+        return {
+            resetToken, refreshToken
+        };
+    }
+    catch (error) {
+        yield session.abortTransaction();
+        throw error;
+    }
+    finally {
+        yield session.endSession();
+    }
 });
 const resetPassword = (_a) => __awaiter(void 0, [_a], void 0, function* ({ token, newPassword }) {
     const session = yield mongoose_1.default.startSession();

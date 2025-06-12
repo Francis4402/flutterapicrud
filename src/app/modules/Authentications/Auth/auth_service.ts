@@ -151,39 +151,61 @@ const changePassword = async (
 };
 
 
-const forgotPassword = async ({ email }: { email: string }) => {
+const forgotPassword = async (userData: TUser) => {
 
-   const user = await User.findOne({ email: email });
+    const session = await mongoose.startSession();
 
-   if (!user) {
-       throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
-   }
+    try {
+        session.startTransaction();
 
-   if (user.isBlocked) {
-       throw new AppError(StatusCodes.FORBIDDEN, 'User is blocked!');
-   }
+        const user = await User.findOne({ email: userData.email }).session(
+            session
+        );
+
+        if (!user) {
+            throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
+         }
+
+        const isBlocked = user.isBlocked;
+
+        if(isBlocked === true) {
+            throw new AppError(StatusCodes.FORBIDDEN, 'Your account is blocked !');
+        }
+
+        const jwtPayload: IJwtPayload = {
+            userId: user._id.toString(),
+            name: user.name as string,
+            email: user.email as string,
+            role: user.role as 'admin' | 'agent' | 'user',
+            isBlocked: user.isBlocked as boolean,
+        };
+    
+    
+        const resetToken = createToken(
+            jwtPayload,
+            config.jwt_secret as string,
+            config.jwt_access_expires_in as string,
+        );
+
+        const refreshToken = createToken(
+            jwtPayload,
+            config.jwt_refresh_secret as string,
+            config.jwt_refresh_expires_in as string,
+        );
 
 
-   const resetToken = createToken(
-      { 
-          userId: user._id.toString(),
-          email: user.email 
-      } as IJwtPayload,
-      config.jwt_secret as string,
-      '1h'
-  );
+        return {
+            resetToken, refreshToken
+        }
+    } catch (error) {
+        await session.abortTransaction();
+        throw error;
+    } finally {
+        await session.endSession();
+    }
 
-   if (!resetToken) {
-      throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to generate reset token');
-   }
 
-   return { 
-      status: 'success',
-      message: 'Password reset token generated',
-      data: {
-          resetToken
-      }
-   };
+   
 };
 
 

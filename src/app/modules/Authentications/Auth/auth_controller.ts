@@ -73,13 +73,25 @@ const changePassword = catchAsync(async (req, res) => {
 });
 
 const forgotPassword = catchAsync(async (req, res) => {
-    await AuthService.forgotPassword(req.body);
+    const result = await AuthService.forgotPassword(req.body);
+
+    const { refreshToken, resetToken } = result;
+
+    res.cookie('refreshToken', refreshToken, {
+        secure: config.node_env === 'production',
+        httpOnly: true,
+        sameSite: 'none',
+        maxAge: 1000 * 60 * 60 * 24 * 365,
+    });
 
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
         message: 'Password reset token generated successfully!',
-        data: null,
+        data: {
+            resetToken,
+            refreshToken
+        }
     });
 });
 

@@ -19,19 +19,32 @@ router.get('/:user1/:user2', async (req, res) => {
 
 
 
-router.get('/unreadCount/:userId', async (req, res) => {
-  const { userId } = req.params;
+router.patch('/read/:senderId/:receiverId', async (req, res) => {
+  const { senderId, receiverId } = req.params;
+  try {
+    await MessageModel.updateMany(
+      { senderId, receiverId, isRead: false },
+      { $set: { isRead: true } }
+    );
+    res.sendStatus(200);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to mark as read' });
+  }
+});
+
+router.get('/hasUnread/:userId/:senderId', async (req, res) => {
+  const { userId, senderId } = req.params;
 
   try {
-    
-    const unreadCount = await MessageModel.countDocuments({
-      receiverId: userId,
-      isRead: false,
-    });
+      const hasUnread = await MessageModel.exists({
+          senderId,
+          receiverId: userId,
+          isRead: false,
+      });
 
-    res.status(200).json({ unreadCount });
+      res.status(200).json({ hasUnread: !!hasUnread });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch unread messages count" });
+      res.status(500).json({ error: "Failed to check unread messages" });
   }
 });
 

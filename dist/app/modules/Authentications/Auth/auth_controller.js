@@ -75,12 +75,22 @@ const changePassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
     });
 }));
 const forgotPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield auth_service_1.AuthService.forgotPassword(req.body);
+    const result = yield auth_service_1.AuthService.forgotPassword(req.body);
+    const { refreshToken, resetToken } = result;
+    res.cookie('refreshToken', refreshToken, {
+        secure: config_1.default.node_env === 'production',
+        httpOnly: true,
+        sameSite: 'none',
+        maxAge: 1000 * 60 * 60 * 24 * 365,
+    });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
         message: 'Password reset token generated successfully!',
-        data: null,
+        data: {
+            resetToken,
+            refreshToken
+        }
     });
 }));
 const resetPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

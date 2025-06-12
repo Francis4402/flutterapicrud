@@ -24,17 +24,28 @@ router.get('/:user1/:user2', (req, res) => __awaiter(void 0, void 0, void 0, fun
         res.status(500).json({ error: 'Failed to fetch messages' });
     }
 }));
-router.get('/unreadCount/:userId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId } = req.params;
+router.patch('/read/:senderId/:receiverId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { senderId, receiverId } = req.params;
     try {
-        const unreadCount = yield messages_model_1.MessageModel.countDocuments({
+        yield messages_model_1.MessageModel.updateMany({ senderId, receiverId, isRead: false }, { $set: { isRead: true } });
+        res.sendStatus(200);
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Failed to mark as read' });
+    }
+}));
+router.get('/hasUnread/:userId/:senderId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId, senderId } = req.params;
+    try {
+        const hasUnread = yield messages_model_1.MessageModel.exists({
+            senderId,
             receiverId: userId,
             isRead: false,
         });
-        res.status(200).json({ unreadCount });
+        res.status(200).json({ hasUnread: !!hasUnread });
     }
     catch (error) {
-        res.status(500).json({ error: "Failed to fetch unread messages count" });
+        res.status(500).json({ error: "Failed to check unread messages" });
     }
 }));
 exports.messagesRoute = router;

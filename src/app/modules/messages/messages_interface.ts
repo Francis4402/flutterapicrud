@@ -8,4 +8,4 @@ export type TMessage = {
     fileName?: string;
     isRead?: boolean;
     timestamp: string | Date;
-  };
+};
