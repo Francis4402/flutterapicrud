@@ -30,59 +30,55 @@ async function main() {
         io.on("connection", (socket) => {
             console.log("✅ Client connected:", socket.id);
 
-            socket.on('joinRoom', async (id) => {
-                clients[id] = socket;
-            })
+            socket.on('joinRoom', (roomId) => {
+                socket.join(roomId);
+                console.log(`User ${socket.id} joined room ${roomId}`);
+            });
 
-            socket.on('message', async (msg) => {
-                console.log('message', msg);
-                let senderId = msg.senderId;
-                if(clients[senderId]) 
-                
-                clients[senderId].emit('message', msg)
-                
-                // const { roomId, senderId, receiverId, message, image, file, fileName } = data;
+            socket.on('sendMessage', async (data) => {
+   
+                const { roomId, senderId, receiverId, message, image, file, fileName } = data;
 
-                // let imagePath: string | undefined;
-                // let filePath: string | undefined;
+                let imagePath: string | undefined;
+                let filePath: string | undefined;
 
-                // if(image) {
-                //     const extension = image.startsWith('data:image/')
-                //     ? image.split(';')[0].split('/')[1] : '*';
-                //     imagePath = saveFile(image, extension);
-                // }
+                if(image) {
+                    const extension = image.startsWith('data:image/')
+                    ? image.split(';')[0].split('/')[1] : '*';
+                    imagePath = saveFile(image, extension);
+                }
 
-                // if (file) {
-                //     const extension = fileName?.split('.').pop() || 'bin';
-                //     filePath = saveFile(file, extension);
-                // }
+                if (file) {
+                    const extension = fileName?.split('.').pop() || 'bin';
+                    filePath = saveFile(file, extension);
+                }
 
-                // const newMessage = new MessageModel({
-                //     roomId,
-                //     senderId,
-                //     receiverId,
-                //     message,
-                //     image,
-                //     file: filePath,
-                //     fileName,
-                //     timestamp: new Date(),
-                // });
+                const newMessage = new MessageModel({
+                    roomId,
+                    senderId,
+                    receiverId,
+                    message,
+                    image,
+                    file: filePath,
+                    fileName,
+                    timestamp: new Date(),
+                });
                 
                 
-                // await newMessage.save();
+                await newMessage.save();
                 
 
-                // io.to(roomId).emit('newMessage', {
-                //     _id: newMessage._id,
-                //     roomId,
-                //     senderId,
-                //     receiverId,
-                //     message,
-                //     image,
-                //     file: filePath,
-                //     fileName,
-                //     timestamp: newMessage.timestamp,
-                // });
+                io.to(roomId).emit('newMessage', {
+                    _id: newMessage._id,
+                    roomId,
+                    senderId,
+                    receiverId,
+                    message,
+                    image,
+                    file: filePath,
+                    fileName,
+                    timestamp: newMessage.timestamp,
+                });
                   
             });
 
