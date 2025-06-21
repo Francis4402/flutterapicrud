@@ -42,7 +42,9 @@ const loginUserFromDB = async (userData: TUser) => {
             name: user.name as string,
             email: user.email as string,
             role: user.role as 'admin' | 'agent' | 'user',
+            isOnline: user.isOnline as boolean,
             isBlocked: user.isBlocked as boolean,
+            lastSeen: user.lastSeen as Date,
         };
 
         const accessToken = createToken(
@@ -98,7 +100,9 @@ const refreshToken = async (token: string) => {
         name: isUserExist.name as string,
         email: isUserExist.email as string,
         role: isUserExist.role as 'admin' | 'agent' | 'user',
+        isOnline: isUserExist.isOnline as boolean,
         isBlocked: isUserExist.isBlocked as boolean,
+        lastSeen: isUserExist.lastSeen as Date,
     };
  
     const newAccessToken = createToken(
@@ -177,7 +181,9 @@ const forgotPassword = async (userData: TUser) => {
             name: user.name as string,
             email: user.email as string,
             role: user.role as 'admin' | 'agent' | 'user',
+            isOnline: user.isOnline as boolean,
             isBlocked: user.isBlocked as boolean,
+            lastSeen: user.lastSeen as Date,
         };
     
     
@@ -204,8 +210,6 @@ const forgotPassword = async (userData: TUser) => {
         await session.endSession();
     }
 
-
-   
 };
 
 

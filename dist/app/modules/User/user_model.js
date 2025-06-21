@@ -69,9 +69,17 @@ const userSchema = new mongoose_1.Schema({
         required: true,
         enum: ['admin', 'agent', 'user'],
     },
+    isOnline: {
+        type: Boolean,
+        default: false
+    },
     isBlocked: {
         type: Boolean,
         default: false,
+    },
+    lastSeen: {
+        type: Date,
+        default: Date.now,
     }
 }, {
     timestamps: true

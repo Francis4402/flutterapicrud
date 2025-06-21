@@ -8,6 +8,8 @@ const userValidationSchema = zod_1.z.object({
         password: zod_1.z.string().min(6, 'Password must be at least 6 characters long'),
         name: zod_1.z.string().min(1, 'Name is required'),
         role: zod_1.z.enum(['admin', 'agent', 'user']).default('user'),
+        isOnline: zod_1.z.boolean().default(false),
+        isBlocked: zod_1.z.boolean().default(false),
     })
 });
 const loginZodSchema = zod_1.z.object({

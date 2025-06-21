@@ -1,37 +1,43 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from 'bcrypt';
 import config from "../../config";
-import AppError from "../../errors/appError";
-import { StatusCodes } from "http-status-codes";
 import { TUser, UserModel } from "./user_interface";
 
 
 const userSchema = new Schema<TUser, UserModel>(
     {
-        name: {
-            type: String,
-            required: true,
-         },
-         email: {
-            type: String,
-            required: true,
-            unique: true,
-            lowercase: true,
-         },
-         password: {
-            type: String,
-            required: true,
-         },
-         role: {
-            type: String,
-            required: true,
-            enum: ['admin', 'agent', 'user'],
-        },
-         isBlocked: {
-            type: Boolean,
-            default: false,
-         }
-         
+      name: {
+         type: String,
+         required: true,
+      },
+      email: {
+         type: String,
+         required: true,
+         unique: true,
+         lowercase: true,
+      },
+      password: {
+         type: String,
+         required: true,
+      },
+      role: {
+         type: String,
+         required: true,
+         enum: ['admin', 'agent', 'user'],
+      },
+      isOnline: {
+         type: Boolean,
+         default: false
+      },
+      isBlocked: {
+         type: Boolean,
+         default: false,
+      },
+      lastSeen: {
+         type: Date,
+         default: Date.now,
+      }
+      
     }, {
         timestamps: true
     }

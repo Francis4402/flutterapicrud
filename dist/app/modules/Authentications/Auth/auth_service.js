@@ -39,7 +39,9 @@ const loginUserFromDB = (userData) => __awaiter(void 0, void 0, void 0, function
             name: user.name,
             email: user.email,
             role: user.role,
+            isOnline: user.isOnline,
             isBlocked: user.isBlocked,
+            lastSeen: user.lastSeen,
         };
         const accessToken = (0, auth_utils_1.createToken)(jwtPayload, config_1.default.jwt_secret, config_1.default.jwt_access_expires_in);
         const refreshToken = (0, auth_utils_1.createToken)(jwtPayload, config_1.default.jwt_refresh_secret, config_1.default.jwt_refresh_expires_in);
@@ -75,7 +77,9 @@ const refreshToken = (token) => __awaiter(void 0, void 0, void 0, function* () {
         name: isUserExist.name,
         email: isUserExist.email,
         role: isUserExist.role,
+        isOnline: isUserExist.isOnline,
         isBlocked: isUserExist.isBlocked,
+        lastSeen: isUserExist.lastSeen,
     };
     const newAccessToken = (0, auth_utils_1.createToken)(jwtPayload, config_1.default.jwt_secret, config_1.default.jwt_access_expires_in);
     return {
@@ -117,7 +121,9 @@ const forgotPassword = (userData) => __awaiter(void 0, void 0, void 0, function*
             name: user.name,
             email: user.email,
             role: user.role,
+            isOnline: user.isOnline,
             isBlocked: user.isBlocked,
+            lastSeen: user.lastSeen,
         };
         const resetToken = (0, auth_utils_1.createToken)(jwtPayload, config_1.default.jwt_secret, config_1.default.jwt_access_expires_in);
         const refreshToken = (0, auth_utils_1.createToken)(jwtPayload, config_1.default.jwt_refresh_secret, config_1.default.jwt_refresh_expires_in);

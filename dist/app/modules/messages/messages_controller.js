@@ -13,20 +13,35 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.messagesController = void 0;
-const messages_services_1 = require("./messages_services");
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
-const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
-const http_status_codes_1 = require("http-status-codes");
+const messages_services_1 = require("./messages_services");
 const getMessages = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { user1, user2 } = req.params;
-    const messages = yield messages_services_1.messagesServices.getMessagesBetweenUsers(user1, user2);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
-        success: true,
-        message: 'Messages Retrieved',
-        data: messages,
-    });
+    const { senderId, receiverId, page, limit } = req.query;
+    try {
+        const message = yield messages_services_1.messageServices.fetchMessages({
+            currentUserId: req.user._id,
+            senderId: senderId,
+            receiverId: receiverId,
+            page: parseInt(page, 10),
+            limit: parseInt(limit, 10),
+        });
+        res.json(message);
+    }
+    catch (error) {
+        res.status(500).json({ message: "Error Fetching Messages" });
+    }
+}));
+const getChatRoom = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const rooms = yield messages_services_1.messageServices.chatRoom(req.userId);
+        res.status(200).json(rooms);
+    }
+    catch (error) {
+        console.error('Error fetching chat rooms:', error);
+        res.status(500).json({ message: 'Error Fetching Rooms' });
+    }
 }));
 exports.messagesController = {
-    getMessages
+    getMessages,
+    getChatRoom,
 };

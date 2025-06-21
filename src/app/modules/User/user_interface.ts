@@ -7,7 +7,9 @@ export type TUser = {
     email: string;
     password: string;
     role: 'admin' | 'agent' | 'user';
+    isOnline: boolean,
     isBlocked: boolean;
+    lastSeen: Date;
 }
 
 export interface UserModel extends Model<TUser> {
