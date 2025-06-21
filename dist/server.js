@@ -19,6 +19,7 @@ const socket_io_1 = require("socket.io");
 const messages_model_1 = require("./app/modules/messages/messages_model");
 const fileStorageService_1 = require("./app/utils/fileStorageService");
 let server;
+let clients = {};
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -34,13 +35,17 @@ function main() {
             });
             io.on("connection", (socket) => {
                 console.log("✅ Client connected:", socket.id);
+                socket.on('joinRoom', (roomId) => {
+                    socket.join(roomId);
+                    console.log(`User ${socket.id} joined room ${roomId}`);
+                });
                 socket.on('sendMessage', (data) => __awaiter(this, void 0, void 0, function* () {
                     const { roomId, senderId, receiverId, message, image, file, fileName } = data;
                     let imagePath;
                     let filePath;
                     if (image) {
                         const extension = image.startsWith('data:image/')
-                            ? image.split(';')[0].split('/')[1] : 'jpg';
+                            ? image.split(';')[0].split('/')[1] : '*';
                         imagePath = (0, fileStorageService_1.saveFile)(image, extension);
                     }
                     if (file) {
